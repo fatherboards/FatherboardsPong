@@ -26,6 +26,7 @@ public class FatherboardsGame extends ApplicationAdapter {
     int wincounter = 0;
     int curx = 50;
     int cury = 100;
+    int speed = 3;
     boolean bottom = false;
     boolean left = false;
     boolean playing = true;
@@ -70,13 +71,13 @@ public class FatherboardsGame extends ApplicationAdapter {
             if (touch.x < 400) paddleLeft.y = touch.y;
             else paddleRight.y = touch.y;
         }
-        if (curx < 800 - size && !left) curx += 6;
+        if (curx < 800 - size && !left) curx += speed;
         else left = true;
-        if (curx > 0 && left) curx -= 6;
+        if (curx > 0 && left) curx -= speed;
         else left = false;
-        if (cury < 500 - size && !bottom) cury += 6;
+        if (cury < 500 - size && !bottom) cury += speed;
         else bottom = true;
-        if (cury > 0 && bottom) cury -= 6;
+        if (cury > 0 && bottom) cury -= speed;
         else bottom = false;
         if (ballRect.overlaps(paddleRight)) {
             curx=700;
@@ -133,9 +134,11 @@ public class FatherboardsGame extends ApplicationAdapter {
 
         if (ballRect.overlaps(paddleRight)) {
             hitSound[(int)(Math.random()*8)].play();
+            speed++;
         }
         if (ballRect.overlaps(paddleLeft)) {
             hitSound[(int)(Math.random()*8)].play();
+            speed++;
         }
 
 
@@ -149,6 +152,7 @@ public class FatherboardsGame extends ApplicationAdapter {
         batch.draw(ball, curx, cury, size, size);
         batch.end();
         if(ballRect.x <25 || ballRect.x >750) {
+            speed = 3;
             return false;
         }
         else {

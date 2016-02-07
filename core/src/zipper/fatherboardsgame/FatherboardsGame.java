@@ -3,13 +3,16 @@ package zipper.fatherboardsgame;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Align;
 
 
 public class FatherboardsGame extends ApplicationAdapter {
@@ -20,17 +23,18 @@ public class FatherboardsGame extends ApplicationAdapter {
     Rectangle paddleRight;
     Rectangle backgroundLogo;
     Rectangle ballRect;
-    Rectangle lostTouch;
     Texture ball;
     Sound[] hitSound;
+    BitmapFont font;
     int wincounter = 0;
     int curx = 50;
     int cury = 100;
-    int speed = 3;
+    int speed = 4;
     boolean bottom = false;
     boolean left = false;
     boolean playing = true;
     int size = 50;
+    int winShow = 0;
     OrthographicCamera camera;
 
     @Override
@@ -39,12 +43,22 @@ public class FatherboardsGame extends ApplicationAdapter {
         batch = new SpriteBatch();
         paddles = new Texture("purple.jpg");
         background = new Texture("fatherboardslogo.png");
-        paddleLeft = new Rectangle(25, 100, 25, 100);
-        paddleRight = new Rectangle(750, 100, 25, 100);
+        paddleLeft = new Rectangle(25, 100, 25, 75);
+        paddleRight = new Rectangle(750, 100, 25, 75);
         backgroundLogo = new Rectangle(500,300,400,400);
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
 
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("font.ttf"));
+
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 25;
+        parameter.characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890:";
+
+        font = generator.generateFont(parameter);
+        generator.dispose();
+        font.setColor(Color.CYAN);
     }
 
     @Override
@@ -61,7 +75,7 @@ public class FatherboardsGame extends ApplicationAdapter {
         camera.update();
         int prevwincounter = wincounter;
 
-        Gdx.gl.glClearColor(0, 1, 1, 1);
+        Gdx.gl.glClearColor(0,1,1,0);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         ballRect = new Rectangle(curx, cury, size, size);
         if (Gdx.input.isTouched()) {
@@ -85,7 +99,7 @@ public class FatherboardsGame extends ApplicationAdapter {
             wincounter++;
         }
         if (ballRect.overlaps(paddleLeft)) {
-            curx=100;
+            curx=75;
             left = false;
             wincounter++;
         }
@@ -144,15 +158,33 @@ public class FatherboardsGame extends ApplicationAdapter {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+        font.setColor(Color.RED);
+        font.draw(batch, "SCORE: " + wincounter, 125, 450, 0, Align.center, true);
+        font.setColor(Color.CYAN);
         if(prevwincounter!=wincounter) {
-            batch.draw(background,200, 75,400,400);
+            winShow++;
         }
-        batch.draw(paddles, paddleLeft.x, paddleLeft.y, 25, 100);
-        batch.draw(paddles, paddleRight.x, paddleRight.y, 25, 100);
+        if(winShow >0 && winShow < 7) {
+            winShow++;
+            batch.draw(background, 200, 25, 400, 400);
+        }
+        else if(winShow>=7) {
+            winShow=0;
+        }
+        batch.draw(paddles, paddleLeft.x, paddleLeft.y, 25, 75);
+        batch.draw(paddles, paddleRight.x, paddleRight.y, 25, 75);
         batch.draw(ball, curx, cury, size, size);
         batch.end();
-        if(ballRect.x <25 || ballRect.x >750) {
-            speed = 3;
+        if(ballRect.x < 25) {
+            curx = 50;
+            speed = 4;
+            left = false;
+            return false;
+        }
+        else if(ballRect.x > 725) {
+            curx = 700;
+            speed = 4;
+            left = true;
             return false;
         }
         else {
@@ -164,13 +196,13 @@ public class FatherboardsGame extends ApplicationAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        batch.draw(background,200,75,400,400);
+        batch.draw(background, 200, 25, 400, 400);
+        font.draw(batch, "CLICK THE LOGO TO PLAY AGAIN",410, 440, 0, Align.center, true);
+        font.draw(batch, "SCORE: " + wincounter, 125, 75, 0, Align.center, true);
         batch.end();
         if (Gdx.input.isTouched()) {
-            Vector3 touch = new Vector3();
-            touch.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            lostTouch = new Rectangle(touch.x,touch.y,100,100);
-            if(lostTouch.overlaps(backgroundLogo)) {
+            if(backgroundLogo.overlaps(new Rectangle(Gdx.input.getX()-500,Gdx.input.getY()-150,400,400))) {
+                wincounter=0;
                 playing = playing();
             }
         }
